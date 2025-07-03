@@ -1,4 +1,6 @@
 {
   "101": { "username": "iam", "password": "iam123" },
-  "102": { "username": "youare", "password": "youare123" }
+  "102": { "username": "youare", "password": "youare123" },
+  "201": { "username": "iamsecure", "password": "iam123" },
+  "202": { "username": "youaresecure", "password": "youare123" }
 }
