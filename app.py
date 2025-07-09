@@ -59,10 +59,8 @@ def secure_login(user_id):
 
     session['user_id'] = user_id
     session['username'] = username
-    return jsonify({
-        "message": "Login successful",
-        "next": "/dashboard"
-    }), 200
+    session['login_type'] = "secure"  # Track the login type
+    return redirect(url_for('dashboard'))
 
 
 # --- Secure Orders Endpoint (BOLA Protected) ---
