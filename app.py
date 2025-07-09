@@ -139,8 +139,7 @@ def vuln_admin_panel():
     username = session.get('username', 'Unknown')
 
     return f"""
-        <h2>Welcome to the Vulnerable Admin Panel</h2>
-        <p>This page is accessible without role checks!</p>
+        <h2>Welcome to the Admin Panel</h2>
         <p>You are logged in as: <strong>{username}</strong> (User ID: <strong>{user_id}</strong>)</p>
         <a href="/vuln-dashboard"><button>Back to Dashboard</button></a>
     """
