@@ -47,24 +47,37 @@ def vuln_orders(user_id):
 # --- Secure Login Handler ---
 @app.route('/secureCom/v1/<user_id>/login', methods=['POST'])
 def secure_login(user_id):
-    if request.is_json:
-        data = request.get_json()
-        username = data.get('username')
-        password = data.get('password')
-    else:
-        username = request.form.get('username')
-        password = request.form.get('password')
+    try:
+        print("=== HEADERS ===")
+        print(dict(request.headers))
 
-    user = users.get(user_id)
-    if not user or user['username'] != username or user['password'] != password:
-        return jsonify({"error": "Login failed: Invalid credentials"}), 401
+        print("=== RAW BODY ===")
+        print(request.data.decode())
 
-    session['user_id'] = user_id
-    session['username'] = username
-    return jsonify({
-    "message": "Login successful",
-    "next": "/dashboard"
-}), 200
+        if request.is_json:
+            data = request.get_json()
+            print("Parsed JSON:", data)
+            username = data.get('username')
+            password = data.get('password')
+        else:
+            print("Parsed form:", request.form)
+            username = request.form.get('username')
+            password = request.form.get('password')
+
+        user = users.get(user_id)
+        if not user or user['username'] != username or user['password'] != password:
+            return jsonify({"error": "Invalid credentials"}), 401
+
+        session['user_id'] = user_id
+        session['username'] = username
+        return jsonify({
+            "message": "Login successful",
+            "next": "/dashboard"
+        }), 200
+
+    except Exception as e:
+        print("ERROR:", str(e))
+        return jsonify({"error": str(e)}), 500
 
 
 # --- Secure Orders Endpoint (BOLA Protected) ---
