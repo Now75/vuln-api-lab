@@ -43,6 +43,15 @@ def vuln_orders(user_id):
 # --- Secure Login Handler ---
 @app.route('/secureCom/v1/<user_id>/login', methods=['POST'])
 def secure_login(user_id):
+    print(f"Received login for {user_id}")
+
+    if request.is_json:
+        data = request.get_json()
+    else:
+        data = request.form
+
+    print(f"Request data: {data}")
+    
     if request.is_json:
         data = request.get_json()
         username = data.get('username')
