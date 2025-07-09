@@ -48,19 +48,19 @@ def vuln_orders(user_id):
 @app.route('/secureCom/v1/<user_id>/login', methods=['POST'])
 def secure_login(user_id):
     try:
-        print("=== HEADERS ===")
-        print(dict(request.headers))
+        print("=== HEADERS ===", flush=True)
+        print(dict(request.headers), flush=True)
 
-        print("=== RAW BODY ===")
-        print(request.data.decode())
+        print("=== RAW BODY ===", flush=True)
+        print(request.data.decode(), flush=True)
 
         if request.is_json:
-            data = request.get_json()
-            print("Parsed JSON:", data)
+            data = request.get_json(force=True)
+            print("Parsed JSON:", data, flush=True)
             username = data.get('username')
             password = data.get('password')
         else:
-            print("Parsed form:", request.form)
+            print("Parsed form:", request.form, flush=True)
             username = request.form.get('username')
             password = request.form.get('password')
 
@@ -76,9 +76,8 @@ def secure_login(user_id):
         }), 200
 
     except Exception as e:
-        print("ERROR:", str(e))
+        print("ERROR:", str(e), flush=True)
         return jsonify({"error": str(e)}), 500
-
 
 # --- Secure Orders Endpoint (BOLA Protected) ---
 @app.route('/secureCom/v1/<user_id>/orders')
