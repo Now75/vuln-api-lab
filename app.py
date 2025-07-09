@@ -132,6 +132,18 @@ def dashboard():
         </a><br><br>
         {admin_button}
     """
+# --- Vulnerable Admin Panel (No Function Level Auth + Shows User Info) ---
+@app.route('/commerce/admin')
+def vuln_admin_panel():
+    user_id = session.get('user_id', 'Unknown')
+    username = session.get('username', 'Unknown')
+
+    return f"""
+        <h2>Welcome to the Vulnerable Admin Panel</h2>
+        <p>This page is accessible without role checks!</p>
+        <p>You are logged in as: <strong>{username}</strong> (User ID: <strong>{user_id}</strong>)</p>
+        <a href="/vuln-dashboard"><button>Back to Dashboard</button></a>
+    """
 
 # --- Admin Panel (Role-based Function Level Auth) ---
 @app.route('/admin')
