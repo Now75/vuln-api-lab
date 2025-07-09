@@ -59,7 +59,7 @@ def secure_login(user_id):
 
     session['user_id'] = user_id
     session['username'] = username
-    session['login_type'] = "secure"  # Track the login type
+    session['login_type'] = "secure"
     return redirect(url_for('dashboard'))
 
 
@@ -118,6 +118,20 @@ def dashboard():
             <button>View Secure Orders</button>
         </a><br><br>
         {admin_button}
+    """
+@app.route('/admin')
+def admin_panel():
+    if 'user_id' not in session or 'username' not in session:
+        return redirect(url_for('home'))
+
+    # Only allow user_id 202 and username youaresecure
+    if session['user_id'] != "202" or session['username'] != "youaresecure":
+        return "<h3>Access Denied: You are not authorized to view this page.</h3>", 403
+
+    return """
+        <h2>Welcome to the Admin Panel</h2>
+        <p>You are logged in as an authorized admin: youaresecure</p>
+        <a href="/dashboard"><button>Back to Dashboard</button></a>
     """
 
 @app.route('/logout')
