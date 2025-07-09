@@ -4,56 +4,92 @@ import json
 app = Flask(__name__)
 app.secret_key = 'supersecretkey123'  # Required for sessions
 
-# Load user DB from file
+# --- Load Users and Orders ---
 with open('users.json') as f:
     users = json.load(f)
 
+with open('orders.json') as f:
+    orders = json.load(f)
+
 # --- Vulnerable API Login (BOLA Demo) ---
 @app.route('/commerce/v1/<user_id>/login', methods=['POST'])
-def login(user_id):
+def vuln_login(user_id):
     data = request.get_json()
-
     user = users.get(user_id)
 
     if not user:
         return jsonify({"error": "User not found"}), 404
 
     if data.get("password") == user["password"]:
-        return jsonify({"message": f"Logged in as {user['username']} (userID={user_id})"}), 200
+        # Save session but no strong access control (BOLA vulnerability)
+        session['user_id'] = user_id
+        session['username'] = user["username"]
+        session['login_type'] = "vuln"
+        return jsonify({"message": "Login successful", "redirect": "/vuln-dashboard"}), 200
 
     return jsonify({"error": "Invalid credentials"}), 401
 
-# --- Landing Page ---
-@app.route('/')
-def home():
-    return render_template('index.html')
 
-# --- Web Form Login Handler ---
-@app.route('/web-login', methods=['POST'])
-def web_login():
+# --- Vulnerable Orders Endpoint (BOLA) ---
+@app.route('/commerce/v1/<user_id>/orders')
+def vuln_orders(user_id):
+    user_orders = orders.get(user_id)
+    if user_orders is None:
+        return jsonify({"error": "No orders found"}), 404
+
+    return jsonify({
+        "user_id": user_id,
+        "orders": user_orders
+    })
+
+# --- Secure Login Handler ---
+@app.route('/secureCom/v1/<user_id>/login', methods=['POST'])
+def secure_login(user_id):
     username = request.form.get('username')
     password = request.form.get('password')
 
-    for user_id, user in users.items():
-        if user['username'] == username and user['password'] == password:
-            return f"<h2>Login successful for user: {username} (userID={user_id})</h2>"
+    user = users.get(user_id)
+    if not user or user['username'] != username or user['password'] != password:
+        return "<h3>Login failed: Invalid credentials</h3>", 401
 
-    return "<h3>Login failed: Invalid credentials</h3>", 401
+    session['user_id'] = user_id
+    session['username'] = username
+    return redirect(url_for('dashboard'))
 
-@app.route('/secure-login', methods=['POST'])
-def secure_login():
-    username = request.form.get('username')
-    password = request.form.get('password')
+# --- Secure Orders Endpoint (BOLA Protected) ---
+@app.route('/secureCom/v1/<user_id>/orders')
+def secure_orders(user_id):
+    if 'user_id' not in session:
+        return jsonify({"error": "Unauthorized"}), 401
 
-    for user_id, user in users.items():
-        if user['username'] == username and user['password'] == password:
-            session['user_id'] = user_id
-            session['username'] = username
-            return redirect(url_for('dashboard'))
+    if session['user_id'] != user_id:
+        return jsonify({"error": "Forbidden: You can't access other users' data"}), 403
 
-    return "<h3>Login failed: Invalid credentials</h3>", 401
+    user_orders = orders.get(user_id)
+    if user_orders is None:
+        return jsonify({"error": "No orders found"}), 404
 
+    return jsonify({
+        "user_id": user_id,
+        "orders": user_orders
+    })
 
+# --- Dashboard & Session Management (Vulnerable EP) ---
+@app.route('/vuln-dashboard')
+def vuln_dashboard():
+    if 'user_id' not in session or session.get('login_type') != 'vuln':
+        return redirect(url_for('home'))
+
+    return f"""
+        <h2>Welcome, {session['username']}!</h2>
+        <p>User ID (from session): {session['user_id']}</p>
+        <a href="/commerce/v1/{session['user_id']}/orders">
+            <button>View Orders</button>
+        </a><br><br>
+        <a href="/logout">Logout</a>
+    """
+
+# --- Dashboard & Session Management ---
 @app.route('/dashboard')
 def dashboard():
     if 'user_id' not in session:
@@ -61,15 +97,21 @@ def dashboard():
     return f"""
         <h2>Welcome to your dashboard, {session['username']}!</h2>
         <p>Your session userID: {session['user_id']}</p>
-        <a href="/logout">Logout</a>
+        <a href="/logout">Logout</a><br><br>
+        <a href="/secureCom/v1/{session['user_id']}/orders">
+            <button>View Secure Orders</button>
+        </a>
     """
-
 
 @app.route('/logout')
 def logout():
     session.clear()
     return redirect(url_for('home'))
 
+# --- Landing Page ---
+@app.route('/')
+def home():
+    return render_template('index.html')
 
 # --- Run App ---
 if __name__ == '__main__':
