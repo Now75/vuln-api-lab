@@ -1,10 +1,8 @@
 from flask import Flask, request, jsonify, render_template, redirect, session, url_for
 import json
-from flask_cors import CORS
 
 app = Flask(__name__)
 app.secret_key = 'supersecretkey123'  # Required for sessions
-CORS(app)  # Enable CORS for all routes
 
 # --- Load Users and Orders ---
 with open('users.json') as f:
@@ -47,37 +45,25 @@ def vuln_orders(user_id):
 # --- Secure Login Handler ---
 @app.route('/secureCom/v1/<user_id>/login', methods=['POST'])
 def secure_login(user_id):
-    try:
-        print("=== HEADERS ===", flush=True)
-        print(dict(request.headers), flush=True)
+    if request.is_json:
+        data = request.get_json()
+        username = data.get('username')
+        password = data.get('password')
+    else:
+        username = request.form.get('username')
+        password = request.form.get('password')
 
-        print("=== RAW BODY ===", flush=True)
-        print(request.data.decode(), flush=True)
+    user = users.get(user_id)
+    if not user or user['username'] != username or user['password'] != password:
+        return "<h3>Login failed: Invalid credentials</h3>", 401
 
-        if request.is_json:
-            data = request.get_json(force=True)
-            print("Parsed JSON:", data, flush=True)
-            username = data.get('username')
-            password = data.get('password')
-        else:
-            print("Parsed form:", request.form, flush=True)
-            username = request.form.get('username')
-            password = request.form.get('password')
+    session['user_id'] = user_id
+    session['username'] = username
+    return jsonify({
+        "message": "Login successful",
+        "next": "/dashboard"
+    }), 200
 
-        user = users.get(user_id)
-        if not user or user['username'] != username or user['password'] != password:
-            return jsonify({"error": "Invalid credentials"}), 401
-
-        session['user_id'] = user_id
-        session['username'] = username
-        return jsonify({
-            "message": "Login successful",
-            "next": "/dashboard"
-        }), 200
-
-    except Exception as e:
-        print("ERROR:", str(e), flush=True)
-        return jsonify({"error": str(e)}), 500
 
 # --- Secure Orders Endpoint (BOLA Protected) ---
 @app.route('/secureCom/v1/<user_id>/orders')

@@ -93,7 +93,6 @@
             document.getElementById('login-form').style.display = 'block';
         }
 
-        // Simulated map of known users → used to lookup userID
         const usersMap = {
             "101": { "username": "iam", "password": "iam123" },
             "102": { "username": "youare", "password": "iam123" }
@@ -121,12 +120,10 @@
             const data = await res.json();
 
             if (res.ok) {
-                // Redirect to vulnerable dashboard
                 window.location.href = "/vuln-dashboard";
             } else {
                 document.getElementById('vuln-login-result').innerText = data.error || "Login failed";
             }
-
         });
     </script>
 </body>
