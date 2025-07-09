@@ -59,10 +59,8 @@
 <body>
     <h1><strong>Shop. Don't Stress.</strong></h1>
 
-    <!-- Login Button -->
     <button id="initial-login-btn" onclick="showLogin()">Login</button>
 
-    <!-- Login Forms -->
     <div id="login-form">
         <!-- Vulnerable Login Form -->
         <div>
@@ -78,12 +76,12 @@
         <!-- Secure Login Form -->
         <div class="form-section">
             <h3>Secure Login</h3>
-            <!-- hardcoded example for userID 201 -->
-            <form method="POST" action="/secureCom/v1/201/login">
-                <input type="text" name="username" placeholder="Username" required><br>
-                <input type="password" name="password" placeholder="Password" required><br>
+            <form id="secureLoginForm">
+                <input type="text" id="secure-username" placeholder="Username" required><br>
+                <input type="password" id="secure-password" placeholder="Password" required><br>
                 <button type="submit">Secure Log In</button>
             </form>
+            <div id="secure-login-result"></div>
         </div>
     </div>
 
@@ -96,6 +94,11 @@
         const usersMap = {
             "101": { "username": "iam", "password": "iam123" },
             "102": { "username": "youare", "password": "iam123" }
+        };
+
+        const secureUsersMap = {
+            "201": { "username": "iamsecure", "password": "iam123" },
+            "202": { "username": "youaresecure", "password": "youare123" }
         };
 
         document.getElementById('vulnLoginForm').addEventListener('submit', async function (e) {
@@ -123,6 +126,33 @@
                 window.location.href = "/vuln-dashboard";
             } else {
                 document.getElementById('vuln-login-result').innerText = data.error || "Login failed";
+            }
+        });
+
+        document.getElementById('secureLoginForm').addEventListener('submit', async function (e) {
+            e.preventDefault();
+
+            const username = document.getElementById('secure-username').value;
+            const password = document.getElementById('secure-password').value;
+
+            const userID = Object.keys(secureUsersMap).find(id => secureUsersMap[id].username === username);
+
+            if (!userID) {
+                document.getElementById('secure-login-result').innerText = "Secure user not found";
+                return;
+            }
+
+            const res = await fetch(`/secureCom/v1/${userID}/login`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ username, password })
+            });
+
+            if (res.redirected) {
+                window.location.href = res.url;
+            } else {
+                const data = await res.text();
+                document.getElementById('secure-login-result').innerHTML = data;
             }
         });
     </script>

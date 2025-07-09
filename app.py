@@ -21,14 +21,12 @@ def vuln_login(user_id):
         return jsonify({"error": "User not found"}), 404
 
     if data.get("password") == user["password"]:
-        # Save session but no strong access control (BOLA vulnerability)
         session['user_id'] = user_id
         session['username'] = user["username"]
         session['login_type'] = "vuln"
         return jsonify({"message": "Login successful", "redirect": "/vuln-dashboard"}), 200
 
     return jsonify({"error": "Invalid credentials"}), 401
-
 
 # --- Vulnerable Orders Endpoint (BOLA) ---
 @app.route('/commerce/v1/<user_id>/orders')
@@ -61,7 +59,6 @@ def secure_login(user_id):
     session['username'] = username
     session['login_type'] = "secure"
     return redirect(url_for('dashboard'))
-
 
 # --- Secure Orders Endpoint (BOLA Protected) ---
 @app.route('/secureCom/v1/<user_id>/orders')
@@ -96,14 +93,14 @@ def vuln_dashboard():
         <a href="/logout">Logout</a>
     """
 
-# --- Dashboard & Session Management ---
+# --- Secure Dashboard ---
 @app.route('/dashboard')
 def dashboard():
     if 'user_id' not in session:
         return redirect(url_for('home'))
 
     admin_button = ""
-    if session.get('username') == 'youaresecure':
+    if session.get('user_id') == "202" and session.get('username') == "youaresecure":
         admin_button = f"""
             <a href="/admin">
                 <button>Admin Page</button>
@@ -119,12 +116,13 @@ def dashboard():
         </a><br><br>
         {admin_button}
     """
+
+# --- Admin Panel (Only for user_id 202 and username youaresecure) ---
 @app.route('/admin')
 def admin_panel():
     if 'user_id' not in session or 'username' not in session:
         return redirect(url_for('home'))
 
-    # Only allow user_id 202 and username youaresecure
     if session['user_id'] != "202" or session['username'] != "youaresecure":
         return "<h3>Access Denied: You are not authorized to view this page.</h3>", 403
 
@@ -139,11 +137,9 @@ def logout():
     session.clear()
     return redirect(url_for('home'))
 
-# --- Landing Page ---
 @app.route('/')
 def home():
     return render_template('index.html')
 
-# --- Run App ---
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=5000)
