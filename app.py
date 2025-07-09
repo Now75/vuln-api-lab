@@ -91,12 +91,21 @@ def vuln_dashboard():
     if 'user_id' not in session or session.get('login_type') != 'vuln':
         return redirect(url_for('home'))
 
+    admin_button = ""
+    if session.get('user_id') == "102":
+        admin_button = """
+            <a href="/commerce/admin">
+                <button>Admin Page</button>
+            </a><br><br>
+        """
+
     return f"""
         <h2>Welcome, {session['username']}!</h2>
         <p>User ID (from session): {session['user_id']}</p>
         <a href="/commerce/v1/{session['user_id']}/orders">
             <button>View Orders</button>
         </a><br><br>
+        {admin_button}
         <a href="/logout">Logout</a>
     """
 
