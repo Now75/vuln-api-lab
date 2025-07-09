@@ -45,8 +45,13 @@ def vuln_orders(user_id):
 # --- Secure Login Handler ---
 @app.route('/secureCom/v1/<user_id>/login', methods=['POST'])
 def secure_login(user_id):
-    username = request.form.get('username')
-    password = request.form.get('password')
+    if request.is_json:
+        data = request.get_json()
+        username = data.get('username')
+        password = data.get('password')
+    else:
+        username = request.form.get('username')
+        password = request.form.get('password')
 
     user = users.get(user_id)
     if not user or user['username'] != username or user['password'] != password:
