@@ -70,6 +70,14 @@ def secure_login(user_id):
 # --- Secure Orders Endpoint (BOLA Protected) ---
 @app.route('/secureCom/v1/<user_id>/orders')
 def secure_orders(user_id):
+    # --- API Key check ---
+    required_api_key = "hOCDH5EXWzaEe1ARrs9Lg6MnJKCG3JmW7tVlw6Ft"
+    request_api_key = request.headers.get("x-api-key")
+
+    if request_api_key != required_api_key:
+        return jsonify({"error": "Missing or invalid API key"}), 403
+
+    # --- Session auth checks ---
     if 'user_id' not in session:
         return jsonify({"error": "Unauthorized"}), 401
 
@@ -84,6 +92,7 @@ def secure_orders(user_id):
         "user_id": user_id,
         "orders": user_orders
     })
+
 
 # --- Dashboard for Vuln Flow ---
 @app.route('/vuln-dashboard')
