@@ -1,8 +1,10 @@
 from flask import Flask, request, jsonify, render_template, redirect, session, url_for
 import json
+from flask_cors import CORS
 
 app = Flask(__name__)
 app.secret_key = 'supersecretkey123'  # Required for sessions
+CORS(app)  # Enable CORS for all routes
 
 # --- Load Users and Orders ---
 with open('users.json') as f:
@@ -55,7 +57,7 @@ def secure_login(user_id):
 
     user = users.get(user_id)
     if not user or user['username'] != username or user['password'] != password:
-        return "<h3>Login failed: Invalid credentials</h3>", 401
+        return jsonify({"error": "Login failed: Invalid credentials"}), 401
 
     session['user_id'] = user_id
     session['username'] = username
