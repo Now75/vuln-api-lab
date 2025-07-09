@@ -64,10 +64,8 @@ def secure_login(user_id):
     session['username'] = username
     session['login_type'] = "secure"
 
-    if login_from == 'api':
-        return jsonify({"message": "Login successful", "redirect_to": "/dashboard"}), 200
-    else:
-        return redirect(url_for('dashboard'))
+    # Always redirect to dashboard
+    return redirect(url_for('dashboard'))
 
 # --- Secure Orders Endpoint (BOLA Protected) ---
 @app.route('/secureCom/v1/<user_id>/orders')
