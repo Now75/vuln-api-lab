@@ -2,7 +2,7 @@ from flask import Flask, request, jsonify, render_template, redirect, session, u
 import json
 
 app = Flask(__name__)
-app.secret_key = 'supersecretkey123'  # Required for sessions
+app.secret_key = 'supersecretkey123'
 
 # --- Load Users and Orders ---
 with open('users.json') as f:
@@ -40,18 +40,9 @@ def vuln_orders(user_id):
         "orders": user_orders
     })
 
-# --- Secure Login Handler ---
+# --- Secure Login Handler (API Gateway Compatible) ---
 @app.route('/secureCom/v1/<user_id>/login', methods=['POST'])
 def secure_login(user_id):
-    print(f"Received login for {user_id}")
-
-    if request.is_json:
-        data = request.get_json()
-    else:
-        data = request.form
-
-    print(f"Request data: {data}")
-    
     if request.is_json:
         data = request.get_json()
         username = data.get('username')
@@ -62,12 +53,17 @@ def secure_login(user_id):
 
     user = users.get(user_id)
     if not user or user['username'] != username or user['password'] != password:
-        return "<h3>Login failed: Invalid credentials</h3>", 401
+        return jsonify({"error": "Invalid credentials"}), 401
 
     session['user_id'] = user_id
     session['username'] = username
     session['login_type'] = "secure"
-    return redirect(url_for('dashboard'))
+
+    # Respond with JSON for API Gateway instead of redirect
+    return jsonify({
+        "message": "Login successful",
+        "redirect_to": "/dashboard"
+    }), 200
 
 # --- Secure Orders Endpoint (BOLA Protected) ---
 @app.route('/secureCom/v1/<user_id>/orders')
@@ -87,7 +83,7 @@ def secure_orders(user_id):
         "orders": user_orders
     })
 
-# --- Dashboard & Session Management (Vulnerable EP) ---
+# --- Dashboard for Vuln Flow ---
 @app.route('/vuln-dashboard')
 def vuln_dashboard():
     if 'user_id' not in session or session.get('login_type') != 'vuln':
@@ -102,7 +98,7 @@ def vuln_dashboard():
         <a href="/logout">Logout</a>
     """
 
-# --- Secure Dashboard ---
+# --- Dashboard for Secure Flow ---
 @app.route('/dashboard')
 def dashboard():
     if 'user_id' not in session:
@@ -126,7 +122,7 @@ def dashboard():
         {admin_button}
     """
 
-# --- Admin Panel (Only for user_id 202 and username youaresecure) ---
+# --- Admin Panel (Role-based Function Level Auth) ---
 @app.route('/admin')
 def admin_panel():
     if 'user_id' not in session or 'username' not in session:
@@ -141,14 +137,17 @@ def admin_panel():
         <a href="/dashboard"><button>Back to Dashboard</button></a>
     """
 
+# --- Logout ---
 @app.route('/logout')
 def logout():
     session.clear()
     return redirect(url_for('home'))
 
+# --- Landing Page ---
 @app.route('/')
 def home():
     return render_template('index.html')
 
+# --- Run App ---
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=5000)
