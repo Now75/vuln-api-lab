@@ -103,14 +103,25 @@ def vuln_dashboard():
 def dashboard():
     if 'user_id' not in session:
         return redirect(url_for('home'))
+
+    admin_button = ""
+    if session.get('username') == 'youaresecure':
+        admin_button = f"""
+            <a href="/admin">
+                <button>Admin Page</button>
+            </a><br><br>
+        """
+
     return f"""
         <h2>Welcome to your dashboard, {session['username']}!</h2>
         <p>Your session userID: {session['user_id']}</p>
         <a href="/logout">Logout</a><br><br>
         <a href="/secureCom/v1/{session['user_id']}/orders">
             <button>View Secure Orders</button>
-        </a>
+        </a><br><br>
+        {admin_button}
     """
+
 
 @app.route('/logout')
 def logout():
