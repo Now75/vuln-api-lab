@@ -47,23 +47,27 @@ def secure_login(user_id):
         data = request.get_json()
         username = data.get('username')
         password = data.get('password')
+        login_from = 'api'
     else:
         username = request.form.get('username')
         password = request.form.get('password')
+        login_from = 'browser'
 
     user = users.get(user_id)
     if not user or user['username'] != username or user['password'] != password:
-        return jsonify({"error": "Invalid credentials"}), 401
+        if login_from == 'api':
+            return jsonify({"error": "Invalid credentials"}), 401
+        else:
+            return "<h3>Login failed: Invalid credentials</h3>", 401
 
     session['user_id'] = user_id
     session['username'] = username
     session['login_type'] = "secure"
 
-    # Respond with JSON for API Gateway instead of redirect
-    return jsonify({
-        "message": "Login successful",
-        "redirect_to": "/dashboard"
-    }), 200
+    if login_from == 'api':
+        return jsonify({"message": "Login successful", "redirect_to": "/dashboard"}), 200
+    else:
+        return redirect(url_for('dashboard'))
 
 # --- Secure Orders Endpoint (BOLA Protected) ---
 @app.route('/secureCom/v1/<user_id>/orders')
