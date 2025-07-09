@@ -120,7 +120,6 @@ def dashboard():
         {admin_button}
     """
 
-
 @app.route('/logout')
 def logout():
     session.clear()
