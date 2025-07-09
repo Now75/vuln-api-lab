@@ -59,7 +59,11 @@ def secure_login(user_id):
 
     session['user_id'] = user_id
     session['username'] = username
-    return redirect(url_for('dashboard'))
+    return jsonify({
+    "message": "Login successful",
+    "next": "/dashboard"
+}), 200
+
 
 # --- Secure Orders Endpoint (BOLA Protected) ---
 @app.route('/secureCom/v1/<user_id>/orders')
